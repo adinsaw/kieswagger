@@ -1,0 +1,58 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.1.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+	id 'java'
+}
+
+group = 'com.kie.main'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+	 jcenter()
+}
+
+configurations{
+compile.exclude group:'javax.ws.rs'
+compile.exclude group:'xerces'
+	}
+dependencies {
+	compile files("libs/xercesImpl-2.12.0.SP02.jar")
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	//runtimeOnly 'com.h2database:h2'
+	// https://mvnrepository.com/artifact/com.h2database/h2
+	runtime group: 'com.h2database', name: 'h2', version: '1.4.199'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	compile group: 'org.webjars', name: 'swagger-ui', version: '2.2.10'
+	//compile group: 'javax.ws.rs', name: 'jsr311-api', version: '1.1.1'
+	compile group: 'io.swagger', name: 'swagger-jaxrs', version: '1.5.15'
+	
+	compile group: 'org.apache.cxf', name: 'cxf-rt-rs-service-description-swagger', version: '3.1.11'
+	compile group: 'org.jboss.spec.javax.ws.rs', name: 'jboss-jaxrs-api_2.1_spec', version: '2.0.0.Final'
+	compile group: 'org.kie.server', name: 'kie-server-client', version: '7.26.0.Final'
+	// https://mvnrepository.com/artifact/org.kie/kie-spring-boot-starters
+	// https://mvnrepository.com/artifact/org.kie/kie-server-spring-boot-starter
+	compile group: 'org.kie', name: 'kie-server-spring-boot-starter', version: '7.26.0.Final'
+
+	
+	//compile group: 'org.kie', name: 'kie-spring-boot-starters', version: '7.26.0.Final', ext: 'pom'
+}
+task pathingJar(type: Jar){
+dependsOn configurations.runtime
+appendix='pathing'
+doFirst {
+		manifest {
+			attributes "Class-Path": configurations.runtime.files.collect{
+				it.toURL().toString().replaceFirst(/file:\/+/,'/')
+			}.join(' ')
+		}}
+}
+bootRun {
+	dependsOn pathingJar
+	doFirst {
+		classpath=files("$buildDir/classes/java/main","$buildDir/resources/main",pathingJar.archivePath)
+	}
+}
